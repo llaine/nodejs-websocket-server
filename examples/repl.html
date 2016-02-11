@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<title>WebSocket REPL Client</title>
+<meta charset=”utf-8”>
+<script>
+    var url = "ws://localhost:9999/repl";
+    var ws = new WebSocket(url);
+    ws.onmessage = function(e) {
+        console.log("command: ", e.data);
+        try {
+            var result = eval(e.data);
+            ws.send(result.toString());
+        } catch (err) {
+            ws.send(err.toString());
+        }
+    }
+    ws.onclose = function(e) {
+        console.log(e);
+    }
+</script>

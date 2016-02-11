@@ -13,6 +13,14 @@ var opcodes = {
   PONG : 10
 };
 
+/**
+ * The WebSocket connection.
+ * Constructor handle the websocket handshake.
+ * @param req
+ * @param socket
+ * @param upgradeHead
+ * @constructor
+ */
 var WebSocketConnection = function(req, socket, upgradeHead) {
   var self = this;
 
@@ -39,10 +47,13 @@ var WebSocketConnection = function(req, socket, upgradeHead) {
   this.socket = socket;
   this.buffer = new Buffer(0);
   this.closed = false;
-}
+};
 util.inherits(WebSocketConnection, events.EventEmitter);
 
-// Send a text or binary message on the WebSocket connection
+/**
+ * Send a text or binary message on the WebSocket connection
+ * @param obj
+ */
 WebSocketConnection.prototype.send = function(obj) {
   var opcode;
   var payload;
@@ -57,8 +68,13 @@ WebSocketConnection.prototype.send = function(obj) {
     throw new Error("Cannot send object. Must be string or Buffer");
   }
   this._doSend(opcode, payload);
-}
-// Close the WebSocket connection
+};
+
+/**
+ * Close the WebSocket connection
+ * @param code
+ * @param reason
+ */
 WebSocketConnection.prototype.close = function(code, reason) {
   var opcode = opcodes.CLOSE;
   var buffer;
@@ -72,8 +88,13 @@ WebSocketConnection.prototype.close = function(code, reason) {
   }
   this._doSend(opcode, buffer);
   this.closed = true;
-}
-// Process incoming bytes
+};
+
+/**
+ * Process incoming bytes
+ * @returns {boolean}
+ * @private
+ */
 WebSocketConnection.prototype._processBuffer = function() {
   var buf = this.buffer;
 
@@ -126,8 +147,14 @@ WebSocketConnection.prototype._processBuffer = function() {
 
   this.buffer = buf.slice(idx + length);
   return true;
-}
+};
 
+/**
+ * Handle frame depending on the OpCode
+ * @param opcode
+ * @param buffer
+ * @private
+ */
 WebSocketConnection.prototype._handleFrame = function(opcode, buffer) {
   var payload;
   switch (opcode) {
@@ -159,24 +186,51 @@ WebSocketConnection.prototype._handleFrame = function(opcode, buffer) {
     default:
       this.close(1002, "unknown opcode");
   }
-}
-// Format and send a WebSocket message
+};
+
+/**
+ * Format and send a WebSocket message
+ * @param opcode
+ * @param payload
+ * @private
+ */
 WebSocketConnection.prototype._doSend = function(opcode, payload) {
   this.socket.write(encodeMessage(opcode, payload));
-}
+};
+
 var KEY_SUFFIX = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+/**
+ *
+ * @param key
+ * @returns {Buffer|any|string}
+ */
 var hashWebSocketKey = function(key) {
   var sha1 = crypto.createHash("sha1");
   sha1.update(key + KEY_SUFFIX, "ascii");
   return sha1.digest("base64");
-}
+};
+
+/**
+ *
+ * @param maskBytes
+ * @param data
+ * @returns {Buffer}
+ */
 var unmask = function(maskBytes, data) {
   var payload = new Buffer(data.length);
   for (var i = 0; i < data.length; i++) {
     payload[i] = maskBytes[i % 4] ^ data[i];
   }
   return payload;
-}
+};
+
+/**
+ *
+ * @param opcode
+ * @param payload
+ * @returns {*}
+ */
 var encodeMessage = function(opcode, payload) {
   var buf;
   // first byte: fin and opcode
@@ -218,8 +272,14 @@ var encodeMessage = function(opcode, payload) {
     payload.copy(buf, 10);
   }
   return buf;
-}
+};
 
+/**
+ * Simple function which permit to create the websocket connection
+ * @param port
+ * @param host
+ * @param connectionHandler
+ */
 exports.listen = function(port, host, connectionHandler) {
   var srv = http.createServer(function(req, res) {
   });
