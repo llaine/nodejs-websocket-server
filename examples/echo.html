@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple echo</title>
+</head>
+<body>
+    <div id="output"></div>
+    <script type="text/javascript">
+        function setup() {
+            var output = document.getElementById('output');
+            var ws = new WebSocket('ws://localhost:9999/echo');
+
+            ws.onopen = function (e) {
+                log('Connected');
+                sendMessage('Hello World');
+            };
+
+            ws.onclose = function (e) {
+                log('Disconnected ', e.reason);
+            };
+
+            ws.onerror = function (e) {
+                log('Error ', e);
+            };
+
+            ws.onmessage = function (e) {
+                log('Message received: ', e.data);
+                ws.close();
+            }
+
+            function sendMessage(msg) {
+                ws.send(msg);
+                log('Message sent');
+            }
+
+            function log(s) {
+                var p = document.createElement('p');
+                p.style.wordWrap = 'break-word';
+                p.textContent = s;
+                output.appendChild(p);
+
+                console.log(s);
+            }
+        }
+
+
+        setup();
+    </script>
+</body>
+</html>
